@@ -1,0 +1,28 @@
+<!-- 将QQ截图粘贴到页面中的例子 -->
+<!DOCTYPE html>
+<html>
+    <head>
+        <script> 
+        document.addEventListener('paste', function (event) { 
+            var divElement = document.getElementById("pasteArea")
+            console.log(event.clipboardData);
+            for (var index = 0; index < event.clipboardData.items.length; index++) {
+                var element = event.clipboardData.items[index];
+                var imgBlob = element.getAsFile();
+                var img = document.createElement("img");
+                img.src = window.URL.createObjectURL(imgBlob);
+                divElement.appendChild(img);
+                console.log(element);
+            }
+            for (var index = 0; index < event.clipboardData.types.length; index++) {
+                var element = event.clipboardData.types[index];
+                console.log(element);
+            }
+        })
+        </script>
+    </head>
+    <body>
+        <textarea ></textarea> 
+        <div contenteditable style="width: 100px;height: 100px; border:1px solid" id="pasteArea">把图片粘贴到此处</div> 
+    </body>
+</html>
