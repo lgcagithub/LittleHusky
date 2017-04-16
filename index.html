@@ -7,8 +7,54 @@
         <script src="http://cdn.static.runoob.com/libs/jquery/2.1.1/jquery.min.js"></script>
         <script src="http://cdn.static.runoob.com/libs/bootstrap/3.3.7/js/bootstrap.min.js"></script>
         <script src='https://cdn.rawgit.com/naptha/tesseract.js/1.0.10/dist/tesseract.js'></script>
+        <script src="js/md5.js"></script>
 
         <script> 
+            function translateResponse(data) {
+                var translation_result = document.getElementById("translation_result");
+                if(translation_result) {
+                    var result = data.trans_result;
+                    var dstArr = [];
+                    for (var index = 0; index < result.length; index++) {
+                        var element = result[index].dst;
+                        dstArr.push(element);
+                    }
+                    translation_result.value = dstArr.join("\n");
+                }
+            }
+
+            function translateRequest(str) {
+                var appid = '2015063000000001';
+                var key = '12345678';
+                var salt = 19920913;
+                var query = str;
+                var from = 'auto';
+                var to = 'zh';
+                var str1 = appid + query + salt +key;
+                var sign = MD5(str1);
+                $.ajax({
+                    url: 'http://api.fanyi.baidu.com/api/trans/vip/translate',
+                    type: 'post',
+                    dataType: 'jsonp',
+                    data: {
+                        q: query,
+                        appid: appid,
+                        salt: salt,
+                        from: from,
+                        to: to,
+                        sign: sign
+                    },
+                    success: function (data) {
+                        translateResponse(data);
+                        console.log(data);
+                    } 
+                });
+            }
+
+            function onRecognizationChange(e) {
+                translateRequest(e.srcElement.value);
+            }
+
             window.onload = function(e) {
                 var title1 = "请将截图粘贴到下方";
                 var pasteArea_title = document.getElementById("pasteArea_title");
@@ -23,6 +69,8 @@
                     }
                     for (var index = 0; index < event.clipboardData.items.length; index++) {
                         var element = event.clipboardData.items[index];
+                        if(element.type.indexOf("image") == -1) return;
+
                         var imgBlob = element.getAsFile();
                         img.src = window.URL.createObjectURL(imgBlob);
                         img.width = divElement.clientWidth - 30;
@@ -30,16 +78,18 @@
                         divElement.appendChild(img);
 
                         Tesseract.recognize(imgBlob, {
-                                                        lang: 'vie'
-                                                    })
+                                    lang: 'vie'
+                                })
                                 .progress(function(message){
                                     pasteArea_title.innerText = message.status + ":" + Number(message.progress).toFixed(2);
                                 })
                                 .catch(err => console.error(err))
                                 .then(function(result){
                                     var element = document.getElementById("recognization_result");
+                                    element.onkeyup = onRecognizationChange;
                                     if(element) {
-                                        element.innerText = result.text;
+                                        element.value = result.text;
+                                        translateRequest(result.text);
                                     }
                                     pasteArea_title.innerText = title1;
                                 })
@@ -83,7 +133,7 @@
                         </div>
                         <div class="form-group">
                             <label for="inputEmail3">翻译结果</label>
-                            <textarea class="form-control" rows="6"></textarea>
+                            <textarea id="translation_result" class="form-control" rows="6"></textarea>
                         </div>
                     </form>
                 </div>
