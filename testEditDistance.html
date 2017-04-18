@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>  
+    <head>
+        <meta charset="utf-8"> 
+        <title>test edit distance</title>
+        <script src="js/EditDistance.js"></script>
+        <script>
+            var randomChar = "0123456789abcdefghijklmnopqrstuvwxyz";
+            var arrLen = 100000;
+            var randomStringArr = new Array(arrLen);
+            for (var index = 0; index < arrLen; index++) {
+                var strLen = Number((Math.random() * 128).toFixed(0));
+                if(strLen == 0) strLen = 1;
+                var charArr = new Array(strLen);
+                for (var index2 = 0; index2 < charArr.length; index2++) {
+                    charArr[index2] = randomChar[(Math.random() * randomChar.length).toFixed(0)];
+                }
+                randomStringArr[index] = charArr.join("");
+            }
+
+            var t = Date.now();
+            for (var index = 0; index < arrLen - 1; index++) {
+                computeSimilarity(randomStringArr[index], randomStringArr[index + 1]);
+            }
+            t = Date.now() - t;
+            console.log(t + "ms");
+        </script>
+    </head>
+    <body>
+        
+    </body>
+</html>
