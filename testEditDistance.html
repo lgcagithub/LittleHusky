@@ -19,8 +19,9 @@
             }
 
             var t = Date.now();
+            var ed = new EditDistance();
             for (var index = 0; index < arrLen - 1; index++) {
-                computeSimilarity(randomStringArr[index], randomStringArr[index + 1]);
+                ed.similarity(randomStringArr[index], randomStringArr[index + 1]);
             }
             t = Date.now() - t;
             console.log(t + "ms");
