@@ -22,7 +22,7 @@ EditDistance.prototype._reset = function(nWidth, nHeight) {
     this._matrix = m;
 }
 
-EditDistance.prototype.distance = function(szStr1, szStr2) {
+EditDistance.prototype.distance = function(szStr1, szStr2, compareFunc) {
     var str1 = szStr1;
     var str2 = szStr2;
 
@@ -48,19 +48,27 @@ EditDistance.prototype.distance = function(szStr1, szStr2) {
     var width = this._nWidth;
     var row = 0;
     var col = 0;
-    var isNotEqual = 0;
+    var charDistance = 0;
+
+    var func = function(char1, char2) {
+        return char1 == char2 ? 0 : 1;
+    };
+
+    if(compareFunc) {
+        func = compareFunc;
+    }
 
     for (var index1 = 0; index1 < len1; index1++) {
         row = index1 + 1;
         for (var index2 = 0; index2 < len2; index2++) {
             col = index2 + 1;
 
-            isNotEqual = str1[index1] == str2[index2] ? 0 : 1;
+            charDistance = func(str1[index1], str2[index2]);
 
             matrix[row * width + col] = Math.min(
                 matrix[row * width + col - 1] + 1,
                 matrix[(row - 1) * width + col] + 1,
-                matrix[(row - 1) * width + col - 1] + isNotEqual
+                matrix[(row - 1) * width + col - 1] + charDistance
             );
         }
     }
@@ -68,18 +76,19 @@ EditDistance.prototype.distance = function(szStr1, szStr2) {
     return matrix[len1 * width + len2];
 }
 
-EditDistance.prototype.similarity = function(szStr1, szStr2) {
+EditDistance.prototype.similarity = function(szStr1, szStr2, compareFunc) {
     var str1 = szStr1;
     var str2 = szStr2;
 
     if(str1 == null || str2 == null) return null;
 
-    var maxLen = Math.max(str1.length, str2.length);
+    var len1 = str1.length;
+    var len2 = str2.length;
+
+    var maxLen = Math.max(len1, len2);
     if(maxLen == 0) return 1;
 
     //暂时过滤掉两字符串长度相差50%的情况，以后考虑开放出参数设置
-    var len1 = str1.length;
-    var len2 = str2.length;
     if(len1 > len2) {
         var tmp = len1;
         len1 = len2;
@@ -87,5 +96,5 @@ EditDistance.prototype.similarity = function(szStr1, szStr2) {
     }
     if(len1 / len2  < 0.5) return 0;
 
-    return 1 - this.distance(str1, str2) / maxLen;
+    return 1 - this.distance(str1, str2, compareFunc) / maxLen;
 }

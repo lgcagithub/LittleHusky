@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>  
+    <head>
+        <meta charset="utf-8"> 
+        <title>test edit distance</title>
+        <script src="js/EditDistance.js"></script>
+        <script src="js/similarity_config/similarity_config_head.js"></script>
+        <script src="js/similarity_config/similarity_config_vie.js"></script>
+        <script>
+            SimilarityConfig.Init();
+
+            var config = SimilarityConfig.GetConfig("vie");
+
+            var stringArr = [
+                "xuất khẩu gián tiếp",
+                "nhập khẩu gián tiếp",
+                "phiếu chứng nhận kiểm nghiệm",
+                "séc thanh toán ngay khi xuất trình",
+                "địa điểm giao hàng",
+                "phương thức giao hàng",
+                "cảng giao hàng",
+            ];
+
+            var t = Date.now();
+            var ed = new EditDistance();
+            for (var index = 0; index < stringArr.length; index++) {
+                console.log(stringArr[index], ed.similarity("xuất khẩu gián tiếp", stringArr[index], function(char1, char2) {
+                    return config.GetDistance(char1, char2);
+                }));
+            }
+            t = Date.now() - t;
+            console.log(t + "ms");
+        </script>
+    </head>
+    <body>
+        
+    </body>
+</html>
