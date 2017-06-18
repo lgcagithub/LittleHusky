@@ -8,10 +8,94 @@
         <script src="js/bootstrap.min.js"></script>
         <script src='https://cdn.rawgit.com/naptha/tesseract.js/1.0.10/dist/tesseract.js'></script>
         <script src="js/md5.js"></script>
+
+        <script src="js/EditDistance.js"></script>
         <script src="js/similarity_config/similarity_config_head.js"></script>
         <script src="js/similarity_config/similarity_config_vie.js"></script>
 
         <script> 
+            console.log(decodeURIComponent("%E5%B0%8F%E5%93%88%E5%81%9A%E8%BF%99%E4%B9%88%E5%A4%9A%EF%BC%8C%E5%8F%AA%E6%83%B3%E9%BB%98%E9%BB%98%E4%B8%BA%E5%A5%B9%E6%8E%92%E5%BF%A7%E8%A7%A3%E9%9A%BE%E3%80%82"));
+
+            var foreign_lang_arr = [
+                "xuất khẩu gián tiếp",
+                "nhập khẩu gián tiếp",
+                "phiếu chứng nhận kiểm nghiệm",
+                "séc thanh toán ngay khi xuất trình",
+                "địa điểm giao hàng",
+                "phương thức giao hàng",
+                "cảng giao hàng",
+            ];
+            var chinese_arr = [
+                "间接出口",
+                "间接进口",
+                "检验合格书",
+                "见票即付支票",
+                "交货地点",
+                "交货方式",
+                "交货港",
+            ];
+
+            SimilarityConfig.Init();
+            var config = SimilarityConfig.GetConfig("vie");
+            var ed = new EditDistance();
+
+            function requesForeign() {
+                $.ajax({
+                    url: "./server/get_foreign.php",
+                    type: 'post',
+                    dataType: 'text',
+                    data: {},
+                    success: function (data) {
+                        var frn_arr = JSON.parse(data);
+                        foreign_lang_arr = frn_arr;
+                    } 
+                });
+            }
+
+            function requesChinese() {
+                $.ajax({
+                    url: "./server/get_chinese.php",
+                    type: 'post',
+                    dataType: 'text',
+                    data: {},
+                    success: function (data) {
+                        var zh_arr = JSON.parse(data);
+                        chinese_arr = zh_arr;
+                    } 
+                });
+            }
+            requesForeign();
+            requesChinese();
+
+            function similarityMatching(str) {
+                var maxSimilarity = 0;
+                var similarity = 0;
+                var matchIndex = 0;
+                for (var index = 0; index < foreign_lang_arr.length; index++) {
+                    similarity = ed.similarity(str, foreign_lang_arr[index], function(char1, char2) {
+                        return config.GetDistance(char1, char2);
+                    });
+                    if(similarity > maxSimilarity) {
+                        maxSimilarity = similarity;
+                        matchIndex = index;
+                    }
+                }
+                console.log(chinese_arr[matchIndex], foreign_lang_arr[matchIndex], maxSimilarity);
+                var element = document.getElementById("matching_result");
+                while (element.childElementCount) {
+                    element.removeChild(element.firstElementChild);
+                }
+                var pEle = document.createElement("p");
+                pEle.innerText = "外文：" + foreign_lang_arr[matchIndex];
+                element.appendChild(pEle);
+                pEle =document.createElement("p");
+                pEle.innerText = "中文：" + chinese_arr[matchIndex];
+                element.appendChild(pEle);
+                pEle =document.createElement("p");
+                pEle.innerText = "相似度：" + maxSimilarity.toFixed(3);
+                element.appendChild(pEle);
+            }
+
             function translateResponse(data) {
                 var translation_result = document.getElementById("translation_result");
                 if(translation_result) {
@@ -26,8 +110,8 @@
             }
 
             function translateRequest(str) {
-                var appid = '2015063000000001';
-                var key = '12345678';
+                var appid = '20170117000036102';
+                var key = 'GTTO09PJ5IA0hYVxHCvn';
                 var salt = 19920913;
                 var query = str;
                 var from = 'auto';
@@ -47,8 +131,8 @@
                         sign: sign
                     },
                     success: function (data) {
-                        translateResponse(data);
                         console.log(data);
+                        translateResponse(data);
                     } 
                 });
             }
@@ -57,10 +141,10 @@
                 translateRequest(e.srcElement.value);
             }
 
-            window.onload = function(e) {
+            window.addEventListener("load", function(e) {
                 var title1 = "请将截图粘贴到下方";
                 var pasteArea_title = document.getElementById("pasteArea_title");
-                console.log(pasteArea_title);
+                // console.log(pasteArea_title);
 
                 document.addEventListener('paste', function (event) { 
                     var divElement = document.getElementById("pasteArea");
@@ -91,14 +175,15 @@
                                     element.onkeyup = onRecognizationChange;
                                     if(element) {
                                         element.value = result.text;
-                                        translateRequest(result.text);
+                                        translateRequest(result.text.trim());
+                                        similarityMatching(result.text.trim());
                                     }
                                     pasteArea_title.innerText = title1;
                                 })
                                 .finally(resultOrError => console.log(resultOrError));
                     }
                 });
-            };
+            });
         </script>
     </head>
 
@@ -107,7 +192,7 @@
             <div class="row clearfix">
                 <div class="col-lg-12 column">
                     <div class="jumbotron">
-                        <h1>欢迎使用小哈！</h1>
+                        <h1>小哈！求翻译！</h1>
                         <p>小哈暂时是一个图文转换+翻译的实用工具。</p>
                     </div>
                 </div>
@@ -150,8 +235,8 @@
                                 本地翻译库相似度匹配结果
                             </h3>
                         </div>
-                        <div class="panel-body">
-                            <div>
+                        <div class="panel-body" id="matching_result">
+                            <!--<div>
                                 <p style="color:#000000">这里是外文这里是外文这里是外文这里是外文这里是外文这里是外文这里是外文</p>
                                 <p style="color:#900000"><strong>这里是中文这里是中文这里是中文这里是中文这里是中文这里是中文这里是中文</strong></p>
                                 <hr/>
@@ -159,7 +244,7 @@
                             <div>
                                 <p style="color:#000000">这里是外文这里是外文这里是外文这里是外文这里是外文这里是外文这里是外文</p>
                                 <p style="color:#900000"><strong>这里是中文这里是中文这里是中文这里是中文这里是中文这里是中文这里是中文</strong></p>
-                            </div>
+                            </div>-->
                         </div>
                         <div class="panel-footer">
                             
@@ -172,7 +257,7 @@
             <div class="row clearfix">
                 <div class="col-lg-12 column">
                     <div class="jumbotron">
-                        <h1>欢迎使用小哈！</h1>
+                        <h1>小哈！求翻译！</h1>
                         <p>小哈暂时是一个图文转换+翻译的实用工具。</p>
                     </div>
                 </div>
