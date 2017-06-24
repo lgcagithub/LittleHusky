@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>  
+    <head>
+        <meta charset="utf-8"> 
+        <title>test web worker</title>
+        <script src="js/EditDistance.js"></script>
+        <script src="js/similarity_config/similarity_config_head.js"></script>
+        <script src="js/similarity_config/similarity_config_vie.js"></script>
+        <script>
+            let count = 0;
+            let numWorker = 4;
+            let workerArr = [];
+
+            SimilarityConfig.Init();
+            var config = SimilarityConfig.GetConfig("vie");
+            var ed = new EditDistance();
+
+            let downCount = 0;
+            function increaceCount(e) {
+                if (e.data == "down") {
+                    downCount++;
+                }
+                else {
+                    count++;
+                }
+                
+                if (downCount == numWorker) {
+                    console.log(count);
+                }
+            }
+
+            function printSomething() {
+                console.log(numWorker);
+            }
+
+            for (var index = 0; index < numWorker; index++) {
+                let w = new Worker("./js/testWebWorker.js");
+                w.addEventListener("message", function(e) {
+                    increaceCount(e);
+                });
+                w.postMessage({e:ed});
+                workerArr.push(w);
+            }
+        </script>
+    </head>
+    <body>
+        
+    </body>
+</html>
